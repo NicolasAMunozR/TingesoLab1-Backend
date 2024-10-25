@@ -1,38 +1,43 @@
 pipeline {
     agent any
-    tools{
+    tools {
         maven 'maven_3_8_1'
     }
-    stages{
-        stage('Build maven'){
-            steps{
+    stages {
+        stage('Build maven') {
+            steps {
                 checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/NicolasAMunozR/TingesoLab1-Backend']])
-                bat 'mvn clean package'
+                dir('backend') { // Cambia a la carpeta 'backend'
+                    bat 'mvn clean package' // Ejecuta Maven en la subcarpeta
+                }
             }
         }
 
         stage('Unit Tests') {
             steps {
-                dir('backend') { // Cambia a la carpeta 'backend'
-                    bat 'mvn clean package' // o 'bat' si estás en Windows
+                dir('backend') { // Cambia a la carpeta 'backend' donde está el pom.xml
+                    bat 'mvn test' // Ejecuta las pruebas unitarias
                 }
             }
         }
 
-        stage('Build docker image'){
-            steps{
-                script{
-                    bat 'docker build -t t-toto104/backend:latest .'
+        stage('Build docker image') {
+            steps {
+                script {
+                    dir('backend') { // Cambia a la carpeta 'backend' para construir la imagen Docker
+                        bat 'docker build -t t-toto104/backend:latest .' // Construye la imagen en la subcarpeta
+                    }
                 }
             }
         }
-        stage('Push image to Docker Hub'){
-            steps{
-                script{
-                   withCredentials([string(credentialsId: 'T_Toto104', variable: 'dhpsw')]) {
+        
+        stage('Push image to Docker Hub') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'T_Toto104', variable: 'dhpsw')]) {
                         bat 'docker login -u t-toto104 -p %dhpsw%'
-                   }
-                   bat 'docker push t-toto104/backend:latest'
+                    }
+                    bat 'docker push t-toto104/backend:latest' // Empuja la imagen a Docker Hub
                 }
             }
         }
