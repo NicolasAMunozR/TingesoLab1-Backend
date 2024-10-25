@@ -14,7 +14,7 @@ pipeline {
         stage('Unit Tests') {
             steps {
                 dir('backend') { // Cambia a la carpeta 'backend'
-                    sh 'mvn clean package' // o 'bat' si estás en Windows
+                    bat 'mvn clean package' // o 'bat' si estás en Windows
                 }
             }
         }
