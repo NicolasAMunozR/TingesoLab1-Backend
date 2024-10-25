@@ -39,18 +39,24 @@ services:
       - DB_HOST=192.168.56.1
     networks:
       - backend-network
+    depends_on:
+      - postgres
   backend2:
     image: ttoto104/backend:latest
     environment:
       - DB_HOST=192.168.56.1
     networks:
       - backend-network
+    depends_on:
+      - postgres
   backend3:
     image: ttoto104/backend:latest
     environment:
       - DB_HOST=192.168.56.1
     networks:
       - backend-network
+    depends_on:
+      - postgres
 
   # Nginx for frontend load balancing
   nginx-frontend:
