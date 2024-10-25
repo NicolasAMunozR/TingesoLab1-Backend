@@ -26,7 +26,7 @@ pipeline {
             steps {
                 script {
                     dir('backend') { // Cambia a la carpeta 'backend' para construir la imagen Docker
-                        bat 'docker build -t t-toto104/backend:latest .' // Construye la imagen en la subcarpeta
+                        bat 'docker build -t ttoto104/backend:latest .' // Construye la imagen en la subcarpeta
                     }
                 }
             }
@@ -36,9 +36,9 @@ pipeline {
             steps {
                 script {
                     withCredentials([string(credentialsId: 'T_Toto104', variable: 'dhpsw')]) {
-                        bat 'docker login -u t-toto104 -p %dhpsw%'
+                        bat 'docker login -u ttoto104 -p %dhpsw%'
                     }
-                    bat 'docker push t-toto104/backend:latest' // Empuja la imagen a Docker Hub
+                    bat 'docker push ttoto104/backend:latest' // Empuja la imagen a Docker Hub
                 }
             }
         }
