@@ -1,5 +1,23 @@
 version: "3.8"
 services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres               # Usa el mismo usuario de PrestaBanco
+      POSTGRES_PASSWORD: alonsoreyes104     # La misma contraseña que usas actualmente
+      POSTGRES_DB: PrestaBanco              # Conéctate a la base de datos PrestaBanco
+    ports:
+      - "5432:5432"
+
+  pgadmin: 
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: nicolas.munoz.r@usach.cl
+      PGADMIN_DEFAULT_PASSWORD: password      # Cambia la contraseña si lo prefieres
+    ports:
+      - "80:80"
+    depends_on:
+      - postgres
   # frontend services
   frontend1:
     image: ttoto104/frontend:latest
