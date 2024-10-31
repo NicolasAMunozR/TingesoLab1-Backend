@@ -6,6 +6,7 @@ import PrestaBanco.Crud.Repositories.CreditRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import java.time.LocalDate;
 import java.util.*;
@@ -21,7 +22,7 @@ public class CreditServiceTest {
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        creditService = new CreditService(creditRepository, userService);
+        creditService = Mockito.spy(new CreditService(creditRepository, userService));
     }
     @Test
     void whenFeeIncomeRatioIsBelow35Percent_thenReturnTrue() {
@@ -1068,4 +1069,85 @@ public class CreditServiceTest {
         Boolean result = creditService.R71(creditFound);
         assertTrue(result);
     }
+    @Test
+    void whenMoreThan12DepositsInLastYearAndTotalExceedsMinimum_thenReturnFalse() {
+        CreditEntity credit = new CreditEntity();
+        credit.setUserId(1L);
+        credit.setAnnualInterestRate(0.035);
+        credit.setMonthlyIncome("2024-10-03 200000,2024-09-03 200000,2024-08-03 200000");
+        UserEntity user = new UserEntity("12345678-9", "Carlos Perez", "carlos@mail.com", "password", null, 5, LocalDate.of(1985, 10, 10));
+        user.setDepositAccount("2023-01-01 1000,2023-02-01 1200,2023-03-01 1300,2023-04-01 1100,"
+                + "2023-05-01 1500,2023-06-01 1200,2023-07-01 1300,2023-08-01 1100,"
+                + "2023-09-01 1000,2023-10-01 1200,2023-11-01 1300,2023-12-01 1500");
+        Mockito.when(userService.findById(1L)).thenReturn(user);
+        Mockito.doReturn(20000.0).when(creditService).averageIncome(credit);
+        boolean result = creditService.R73(credit);
+        assertFalse(result);
+    }
+    @Test
+    void whenLessThanThreeDepositsInLastYear_thenReturnFalse() {
+        CreditEntity credit = new CreditEntity();
+        credit.setUserId(1L);
+        credit.setAnnualInterestRate(0.035);
+        credit.setMonthlyIncome("2024-10-03 200000,2024-09-03 200000,2024-08-03 200000");
+        UserEntity user = new UserEntity("12345678-9", "Carlos Perez", "carlos@mail.com", "password", null, 5, LocalDate.of(1985, 10, 10));
+        user.setDepositAccount("2024-01-01 1000,2024-02-01 1200");
+        Mockito.when(userService.findById(1L)).thenReturn(user);
+        Mockito.doReturn(20000.0).when(creditService).averageIncome(credit);
+        boolean result = creditService.R73(credit);
+        assertFalse(result);
+    }
+    @Test
+    void whenTotalDepositsDoesNotMeetMinimumWithThreeDeposits_thenReturnTrue() {
+        CreditEntity credit = new CreditEntity();
+        credit.setUserId(1L);
+        credit.setAnnualInterestRate(0.035);
+        credit.setMonthlyIncome("2024-10-03 200000,2024-09-03 200000,2024-08-03 200000");
+        UserEntity user = new UserEntity("12345678-9", "Carlos Perez", "carlos@mail.com", "password", null, 5, LocalDate.of(1985, 10, 10));
+        user.setDepositAccount("2024-01-01 1000,2024-02-01 500,2024-03-01 2000");
+        Mockito.when(userService.findById(1L)).thenReturn(user);
+        Mockito.doReturn(20000.0).when(creditService).averageIncome(credit);
+        boolean result = creditService.R73(credit);
+        assertTrue(result);
+    }
+    @Test
+    void whenNoDepositsInLastYear_thenReturnFalse() {
+        CreditEntity credit = new CreditEntity();
+        credit.setUserId(1L);
+        credit.setAnnualInterestRate(0.035);
+        credit.setMonthlyIncome("2024-10-03 200000,2024-09-03 200000,2024-08-03 200000");
+        UserEntity user = new UserEntity("12345678-9", "Carlos Perez", "carlos@mail.com", "password", null, 5, LocalDate.of(1985, 10, 10));
+        user.setDepositAccount("2022-12-01 1500,2022-11-01 1200");
+        Mockito.when(userService.findById(1L)).thenReturn(user);
+        Mockito.doReturn(20000.0).when(creditService).averageIncome(credit);
+        boolean result = creditService.R73(credit);
+        assertFalse(result);
+    }
+    @Test
+    void whenDepositsRegularButTotalLessThanMinimum_thenReturnFalse() {
+        CreditEntity credit = new CreditEntity();
+        credit.setUserId(1L);
+        credit.setAnnualInterestRate(0.035);
+        credit.setMonthlyIncome("2024-10-03 200000,2024-09-03 200000,2024-08-03 200000");
+        UserEntity user = new UserEntity("12345678-9", "Carlos Perez", "carlos@mail.com", "password", null, 5, LocalDate.of(1985, 10, 10));
+        user.setDepositAccount("2023-10-01 400,2023-11-01 500,2023-12-01 300");
+        Mockito.when(userService.findById(1L)).thenReturn(user);
+        Mockito.doReturn(20000.0).when(creditService).averageIncome(credit);
+        boolean result = creditService.R73(credit);
+        assertFalse(result);
+    }
+    @Test
+    void whenLessThan12DepositsAndTotalLessThanMinimum_thenReturnFalse() {
+        CreditEntity credit = new CreditEntity();
+        credit.setUserId(1L);
+        credit.setAnnualInterestRate(0.035);
+        credit.setMonthlyIncome("2024-10-03 200000,2024-09-03 200000,2024-08-03 200000");
+        UserEntity user = new UserEntity("12345678-9", "Carlos Perez", "carlos@mail.com", "password", null, 5, LocalDate.of(1985, 10, 10));
+        user.setDepositAccount("2023-09-01 100,2023-09-02 100");
+        Mockito.when(userService.findById(1L)).thenReturn(user);
+        Mockito.doReturn(20000.0).when(creditService).averageIncome(credit);
+        boolean result = creditService.R73(credit);
+        assertFalse(result);
+    }
+
 }

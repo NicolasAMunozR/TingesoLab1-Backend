@@ -40,32 +40,23 @@ public class CreditService {
      */
     public CreditEntity applicationStatus(CreditEntity credit) {
         String typeOfLoan = credit.getTypeOfLoan();
+        credit.setApplicationStatus("Pendiente de documentación");
         if (typeOfLoan.contains("Primera Vivienda")) {
             if (credit.getProofOfIncome() != null && credit.getAppraisalCertificate() != null && credit.getCreditHistory() != null) {
                 credit.setApplicationStatus("En revisión");
-            } else {
-                credit.setApplicationStatus("Pendiente de documentación");
             }
         } else if (typeOfLoan.contains("Segunda Vivienda")) {
             if (credit.getProofOfIncome() != null && credit.getAppraisalCertificate() != null && credit.getDeedOfTheFirstHome() != null && credit.getCreditHistory() != null) {
                 credit.setApplicationStatus("En revisión");
-            } else {
-                credit.setApplicationStatus("Pendiente de documentación");  
             }
         } else if (typeOfLoan.contains("Propiedades Comerciales")) {
             if (credit.getProofOfIncome() != null && credit.getAppraisalCertificate() != null && credit.getFinancialStatusOfTheBusiness() != null && credit.getBusinessPlan() != null) {
                 credit.setApplicationStatus("En revisión");
-            } else {
-                credit.setApplicationStatus("Pendiente de documentación"); 
             }
         } else if (typeOfLoan.contains("Remodelación")) {
             if (credit.getProofOfIncome() != null && credit.getUpdatedAppraisalCertificate() != null && credit.getRemodelingBudget() != null) {
                 credit.setApplicationStatus("En revisión");
-            } else {
-                credit.setApplicationStatus("Pendiente de documentación"); 
             }
-        } else {
-            return null;
         }
         return creditRepository.save(credit);
     }
@@ -89,18 +80,15 @@ public class CreditService {
             String status = R7(creditFound);
             if (status.contains("Aprobado")) {
                 creditFound.setApplicationStatus("Pre-aprobado");
-                return creditRepository.save(creditFound);
             } else if (status.contains("Revisión")) {
                 creditFound.setApplicationStatus("En evaluación");
-                return creditRepository.save(creditFound);
             } else {
                 creditFound.setApplicationStatus("Rechazada");
-                return creditRepository.save(creditFound);
             }
         } else {
             creditFound.setApplicationStatus("Rechazada");
-            return creditRepository.save(creditFound);
         }
+        return creditRepository.save(creditFound);
     }
 
     /**
@@ -115,24 +103,11 @@ public class CreditService {
         Map<LocalDate, Integer> incomePerMonth = new HashMap<>();
         for (String entry : entries) {
             String[] parts = entry.split(" ");
-            if (parts.length != 2) {
-                System.err.println("Invalid format for entry: " + entry);
-                continue; 
-            }
             String dateString = parts[0].trim(); 
             int amount = 0;
-            try {
-                amount = Integer.parseInt(parts[1]); 
-            } catch (NumberFormatException e) {
-                System.err.println("Error parsing amount: " + parts[1] + " - " + e.getMessage());
-                continue; 
-            }
-            try {
-                LocalDate date = LocalDate.parse(dateString, formatter);
-                incomePerMonth.put(date, amount);
-            } catch (DateTimeParseException e) {
-                System.err.println("Error parsing date: " + dateString + " - " + e.getMessage());
-            }
+            amount = Integer.parseInt(parts[1]);
+            LocalDate date = LocalDate.parse(dateString, formatter);
+            incomePerMonth.put(date, amount);
         }
         LocalDate currentDate = LocalDate.now();
         int totalIncome = 0;
@@ -224,29 +199,21 @@ public class CreditService {
         if (typeOfLoan.contains("Primera Vivienda")) {
             if (requestedAmount > (0.8 * propertyAmount)) {
                 return false;
-            } else {
-                return true;
             }
         } else if (typeOfLoan.contains("Segunda Vivienda")) {
             if (requestedAmount > (0.7 * propertyAmount)) {
                 return false;
-            } else {
-                return true;
             }
         } else if (typeOfLoan.contains("Propiedades Comerciales")) {
             if (requestedAmount > (0.6 * propertyAmount)) {
                 return false;
-            } else {
-                return true;
             }
         } else if (typeOfLoan.contains("Remodelación")) {
             if (requestedAmount > (0.5 * propertyAmount)) {
                 return false;
-            } else {
-                return true;
             }
         }
-        return false;
+        return true;
     }
 
     /**
@@ -271,30 +238,11 @@ public class CreditService {
      */
     public String R7(CreditEntity creditFound) {
         int countTrue = 0;
-        if (R71(creditFound)) {
-            countTrue++;
+        for (boolean result : new boolean[]{R71(creditFound), R72(creditFound), R73(creditFound), R74(creditFound), R75(creditFound)}) {
+            if (result) countTrue++;
         }
-        if (R72(creditFound)) {
-            countTrue++;
-        }
-        if (R73(creditFound)) {
-            countTrue++;
-        }
-        if (R74(creditFound)) {
-            countTrue++;
-        }
-        if (R75(creditFound)) {
-            countTrue++;
-        }
-        if (countTrue == 5) {
-            return "Aprobado";
-        }
-        else if (countTrue >= 3 && countTrue <= 4) {
-            return "Revisión";
-        }
-        else {
-            return "Rechazado";
-        }
+        return (countTrue == 5) ? "Aprobado" :
+                (countTrue >= 3) ? "Revisión" : "Rechazado";
     }
 
     /**
