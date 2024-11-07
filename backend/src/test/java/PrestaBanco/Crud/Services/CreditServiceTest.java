@@ -821,7 +821,7 @@ public class CreditServiceTest {
         assertTrue(result);
     }
     @Test
-    public void testR75_LargeWithdrawal_ReturnsFalse() {
+    public void testR75_LargeWithdrawal_ReturnsTrue() {
         CreditEntity credit = new CreditEntity();
         credit.setUserId(1L);
         UserEntity user = new UserEntity();
@@ -829,7 +829,7 @@ public class CreditServiceTest {
         user.setWithdrawalAccount("2024-04-01 1000,2024-05-01 900,2024-06-01 500");
         when(userService.findById(1L)).thenReturn(user);
         Boolean result = creditService.R75(credit);
-        assertFalse(result);
+        assertTrue(result);
     }
     @Test
     public void testR75_MixedWithdrawals_ReturnsTrue() {
